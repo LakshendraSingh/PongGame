@@ -19,6 +19,8 @@ body {
   justify-content: center;
   min-height: 100vh;
   overflow-x: hidden;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
 }
 
 /* CRT Scanline Effect */
@@ -37,12 +39,15 @@ body {
   flex-direction: column;
   align-items: center;
   z-index: 2;
-  padding: 20px;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .neon-title {
-  font-size: 3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
   margin-bottom: 10px;
+  text-align: center;
   color: #fff;
   text-shadow: 
     0 0 5px #fff,
@@ -55,6 +60,13 @@ body {
   animation: flicker 1.5s infinite alternate;
 }
 
+/* Game Wrapper to help with aspect ratio */
+.game-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 /* Canvas Styling */
 canvas {
   background: rgba(10, 10, 15, 0.8);
@@ -62,6 +74,9 @@ canvas {
   box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 20px rgba(0, 243, 255, 0.2);
   border-radius: 4px;
   max-width: 100%;
+  height: auto;
+  /* Improve touch handling */
+  touch-action: none; 
 }
 
 /* UI Panel */
@@ -74,6 +89,7 @@ canvas {
   padding: 20px;
   box-shadow: 0 0 15px rgba(188, 19, 254, 0.2);
   backdrop-filter: blur(5px);
+  box-sizing: border-box;
 }
 
 /* Inputs & Buttons */
@@ -87,6 +103,7 @@ input {
   text-align: center;
   text-transform: uppercase;
   outline: none;
+  width: 120px;
 }
 
 button {
@@ -99,9 +116,10 @@ button {
   transition: 0.2s;
   text-shadow: 0 0 5px var(--neon-green);
   box-shadow: 0 0 5px var(--neon-green);
+  font-size: 1rem;
 }
 
-button:hover {
+button:hover, button:active {
   background: var(--neon-green);
   color: black;
   box-shadow: 0 0 20px var(--neon-green);
@@ -127,6 +145,21 @@ button.secondary:hover {
   flex-wrap: wrap;
 }
 
+/* Mobile hint text */
+.mobile-hint {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: none;
+}
+
+@media (pointer: coarse) {
+    .mobile-hint {
+        display: block;
+    }
+}
+
 /* Leaderboard Table */
 table {
   width: 100%;
@@ -139,11 +172,13 @@ th {
   border-bottom: 2px solid var(--neon-cyan);
   padding: 10px;
   color: var(--neon-cyan);
+  font-size: 0.9rem;
 }
 
 td {
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.9rem;
 }
 
 tr:nth-child(1) td { color: #ffd700; text-shadow: 0 0 5px #ffd700; } /* Gold */
