@@ -4,19 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================
     // CONFIGURATION
     // =======================
-    const SUPABASE_URL = "https://glesquvczauoqxxbdbdt.supabase.co" 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXNxdXZjemF1b3F4eGJkYmR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjUwMjYsImV4cCI6MjA4NjQwMTAyNn0.HiXkjS5cXrG38RZCcODu0axwFgWSuYVklc_lV-ZZXa8"
+    const SUPABASE_URL = "https://glesquvczauoqxxbdbdt.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXNxdXZjemF1b3F4eGJkYmR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjUwMjYsImV4cCI6MjA4NjQwMTAyNn0.HiXkjS5cXrG38RZCcODu0axwFgWSuYVklc_lV-ZZXa8";
 
     // =======================
-    // SUPABASE SETUP (SAFE MODE)
+    // SUPABASE SETUP
     // =======================
     let sb = null;
     try {
-        if (typeof supabase !== 'undefined' && SUPABASE_URL.startsWith("https") && SUPABASE_ANON_KEY.length > 20) {
+        if (typeof supabase !== 'undefined') {
             sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log("System: Online - Connected to Supabase");
         } else {
-            console.warn("System: Offline Mode.");
+            console.warn("System: Offline Mode (Supabase SDK missing).");
         }
     } catch (e) {
         console.error("Supabase init failed:", e);
@@ -25,11 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================
     // AUDIO SYSTEM (SYNTH)
     // =======================
-    // We use a simple synth so we don't need external audio files
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(type) {
-        // Browsers require user interaction to unmute
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
         const osc = audioCtx.createOscillator();
@@ -40,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = audioCtx.currentTime;
 
         if (type === 'paddle') {
-            // High pitch beep for paddle hit
             osc.type = 'square';
             osc.frequency.setValueAtTime(600, now);
             osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
@@ -49,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
             osc.start(now);
             osc.stop(now + 0.1);
         } else if (type === 'wall') {
-            // Lower thud for walls
             osc.type = 'square';
             osc.frequency.setValueAtTime(200, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
@@ -58,10 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
             osc.start(now);
             osc.stop(now + 0.1);
         } else if (type === 'score') {
-            // Musical chime for scoring
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(440, now); // A4
-            osc.frequency.setValueAtTime(880, now + 0.1); // A5
+            osc.frequency.setValueAtTime(440, now); 
+            osc.frequency.setValueAtTime(880, now + 0.1); 
             gain.gain.setValueAtTime(0.1, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.4);
             osc.start(now);
@@ -73,13 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // CANVAS SETUP
     // =======================
     const canvas = document.getElementById("game");
-    if (!canvas) {
-        console.error("CRITICAL ERROR: Canvas element with id='game' not found.");
-        return; // Stop execution if canvas is missing
-    }
     const ctx = canvas.getContext("2d");
-
-    // Dynamic sizing based on CSS or attributes
     const W = canvas.width;
     const H = canvas.height;
 
@@ -92,56 +81,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const paddleW = 15;
     const paddleSpeed = 8;
 
-    // Entities
     const player = { x: 20, y: H/2 - paddleH/2, color: "#00f3ff" };
     const ai = { x: W - 35, y: H/2 - paddleH/2, color: "#bc13fe" };
     const ball = { x: W/2, y: H/2, dx: 5, dy: 3, size: 10, color: "#ffffff" };
 
-    // Input State
     const keys = { w: false, s: false, ArrowUp: false, ArrowDown: false };
-
-    // Particles
     let particles = [];
 
     // =======================
-    // CONTROLS (DESKTOP)
+    // CONTROLS
     // =======================
     document.addEventListener("keydown", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = true;
-        // Try to resume audio context on first keypress
         if (audioCtx.state === 'suspended') audioCtx.resume();
     });
     document.addEventListener("keyup", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = false;
     });
 
-    // =======================
-    // CONTROLS (MOBILE TOUCH)
-    // =======================
     function handleTouch(e) {
-        e.preventDefault(); // Stop scrolling while playing
+        e.preventDefault();
         const touch = e.touches[0];
-        
-        // Try to resume audio context on touch
         if (audioCtx.state === 'suspended') audioCtx.resume();
         
-        // Calculate scale in case canvas is resized by CSS
         const rect = canvas.getBoundingClientRect();
         const scaleY = canvas.height / rect.height;
-        
-        // Calculate Y position relative to canvas
         const touchY = (touch.clientY - rect.top) * scaleY;
         
-        // Move player paddle to center on finger
         player.y = touchY - paddleH / 2;
-        
-        // Clamp inside bounds
         player.y = Math.max(0, Math.min(H - paddleH, player.y));
     }
 
     canvas.addEventListener('touchstart', handleTouch, { passive: false });
     canvas.addEventListener('touchmove', handleTouch, { passive: false });
-
 
     // =======================
     // PARTICLE SYSTEM
@@ -178,25 +150,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =======================
-    // GAME LOGIC
+    // LOGIC & PHYSICS
     // =======================
     function update() {
-        // Player Movement (Keyboard)
+        // Player movement
         if (keys["w"] || keys["ArrowUp"]) player.y -= paddleSpeed;
         if (keys["s"] || keys["ArrowDown"]) player.y += paddleSpeed;
-        
-        // Note: Touch movement sets player.y directly in handleTouch
-        
-        // Boundary checks for player
         player.y = Math.max(0, Math.min(H - paddleH, player.y));
 
-        // Ball Movement
+        // Ball movement
         ball.x += ball.dx;
         ball.y += ball.dy;
 
-        // Bounce Top/Bottom
+        // Wall Collisions (Top/Bottom)
         if (ball.y <= 0 || ball.y >= H - ball.size) {
             ball.dy *= -1;
+            // Clamp ball inside to prevent sticking
+            if(ball.y <= 0) ball.y = 1;
+            if(ball.y >= H - ball.size) ball.y = H - ball.size - 1;
+            
             spawnParticles(ball.x, ball.y, "#ffffff");
             playSound('wall');
         }
@@ -204,18 +176,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // AI Movement
         if (ball.dx > 0) {
             let targetY = ball.y - paddleH / 2;
-            ai.y += (targetY - ai.y) * 0.08;
+            // AI reaction delay/error
+            let error = (Math.random() - 0.5) * 10;
+            ai.y += (targetY - ai.y + error) * 0.08;
         }
         ai.y = Math.max(0, Math.min(H - paddleH, ai.y));
 
-        // Collisions
+        // Paddle Collisions
+        // FIX 1: Explicitly set ball.x to avoid "stuck inside paddle" infinite loop
         if (hit(player)) {
             reflect(player, 1);
+            ball.x = player.x + paddleW + 2; // Force outside
             spawnParticles(player.x + paddleW, ball.y, player.color);
             playSound('paddle');
         }
-        if (hit(ai)) {
+        else if (hit(ai)) { 
             reflect(ai, -1);
+            ball.x = ai.x - ball.size - 2; // Force outside
             spawnParticles(ai.x, ball.y, ai.color);
             playSound('paddle');
         }
@@ -245,51 +222,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function reflect(p, dir) {
-        let speed = Math.sqrt(ball.dx**2 + ball.dy**2) * 1.1;
-        speed = Math.min(speed, 25);
+        let speed = Math.sqrt(ball.dx**2 + ball.dy**2) * 1.05;
+        
+        // Cap max paddle reflection speed
+        speed = Math.min(speed, 20); 
+
         let relativeIntersectY = (p.y + (paddleH / 2)) - ball.y;
         let normalizedIntersectY = (relativeIntersectY / (paddleH / 2));
         let bounceAngle = normalizedIntersectY * Math.PI / 4;
+        
         ball.dx = speed * Math.cos(bounceAngle) * dir;
         ball.dy = speed * -Math.sin(bounceAngle);
-        ball.x += ball.dx;
     }
 
     function resetBall(dir) {
         ball.x = W / 2;
         ball.y = H / 2;
-        let baseSpeed = 5 + (playerScore + aiScore) * 0.5;
+        
+        // FIX 2: Cap the initial speed based on score. 
+        // Previously: 5 + score * 0.5 (could go to infinity)
+        // New: Cap at 15 max speed
+        let difficulty = (playerScore + aiScore) * 0.5;
+        let baseSpeed = Math.min(15, 5 + difficulty);
+        
         ball.dx = baseSpeed * dir;
         ball.dy = (Math.random() * 4 - 2);
     }
 
     function draw() {
+        // Clear background
         ctx.fillStyle = "#0a0a0f";
         ctx.fillRect(0, 0, W, H);
 
+        // Net
         ctx.fillStyle = "#222";
         ctx.shadowBlur = 0;
         for (let y = 0; y < H; y += 30) ctx.fillRect(W / 2 - 1, y, 2, 15);
 
         ctx.shadowBlur = 15;
         
+        // Player
         ctx.shadowColor = player.color;
         ctx.fillStyle = player.color;
         ctx.fillRect(player.x, player.y, paddleW, paddleH);
 
+        // AI
         ctx.shadowColor = ai.color;
         ctx.fillStyle = ai.color;
         ctx.fillRect(ai.x, ai.y, paddleW, paddleH);
 
+        // Ball
         ctx.shadowColor = "#ffffff";
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(ball.x, ball.y, ball.size, ball.size);
 
+        // Particles
         particles.forEach(p => {
             ctx.shadowColor = p.color;
             p.draw(ctx);
         });
 
+        // Score
         ctx.shadowBlur = 0;
         ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
         ctx.font = "60px 'Orbitron', sans-serif";
@@ -303,14 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(loop);
     }
 
-    // Start Game
+    // Start Game Loop
     loop();
 
     // =======================
     // LEADERBOARD FUNCTIONS
     // =======================
-    
-    // Attach these to window so HTML buttons can see them
     window.submitScore = async function() {
         if (!sb) { alert("Offline Mode: Cannot save score."); return; }
         const nameInput = document.getElementById("name");
@@ -322,8 +313,16 @@ document.addEventListener('DOMContentLoaded', () => {
             score: playerScore
         });
 
-        if (error) { console.error(error); alert("Error saving score"); } 
-        else { alert("SCORE UPLOADED"); loadBoard(); playerScore = 0; aiScore = 0; resetBall(1); }
+        if (error) { 
+            console.error(error); 
+            alert("Error saving score"); 
+        } else { 
+            alert("SCORE UPLOADED"); 
+            loadBoard(); 
+            playerScore = 0; 
+            aiScore = 0; 
+            resetBall(1); 
+        }
     };
 
     window.loadBoard = async function() {
@@ -331,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!tbody) return;
 
         if (!sb) {
-            tbody.innerHTML = `<tr><td colspan="3" style="color: #666;">OFFLINE MODE (NO DB)</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color: #666;">OFFLINE MODE</td></tr>`;
             return;
         }
         
