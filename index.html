@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON PONG: CYBER EDITION</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="scanlines"></div>
+
+  <div class="container">
+    <h1 class="neon-title">NEON <span class="flicker">PONG</span></h1>
+
+    <div class="game-wrapper">
+      <canvas id="game" width="800" height="600"></canvas>
+    </div>
+
+    <div id="ui" class="cyber-panel">
+      <div class="input-group">
+        <input id="name" placeholder="ENTER INITIALS" maxlength="3">
+        <button onclick="submitScore()">SAVE SCORE</button>
+      </div>
+      
+      <div class="controls-row">
+        <button onclick="loadBoard()">REFRESH LEADERBOARD</button>
+      </div>
+
+      <div id="leaderboard-container">
+        <h3>TOP RUNNERS</h3>
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>RK</th>
+              <th>OPERATIVE</th>
+              <th>SCORE</th>
+            </tr>
+          </thead>
+          <tbody id="board-body">
+            <tr><td colspan="3" class="loading-text">WAITING FOR DATA...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Link to external JS -->
+  <script src="script.js"></script>
+</body>
+</html>
