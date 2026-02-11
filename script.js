@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = "https://glesquvczauoqxxbdbdt.supabase.co" 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXNxdXZjemF1b3F4eGJkYmR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjUwMjYsImV4cCI6MjA4NjQwMTAyNn0.HiXkjS5cXrG38RZCcODu0axwFgWSuYVklc_lV-ZZXa8"
 
-
     // =======================
     // SUPABASE SETUP (SAFE MODE)
     // =======================
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let particles = [];
 
     // =======================
-    // CONTROLS
+    // CONTROLS (DESKTOP)
     // =======================
     document.addEventListener("keydown", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = true;
@@ -66,6 +65,31 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener("keyup", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = false;
     });
+
+    // =======================
+    // CONTROLS (MOBILE TOUCH)
+    // =======================
+    function handleTouch(e) {
+        e.preventDefault(); // Stop scrolling while playing
+        const touch = e.touches[0];
+        
+        // Calculate scale in case canvas is resized by CSS
+        const rect = canvas.getBoundingClientRect();
+        const scaleY = canvas.height / rect.height;
+        
+        // Calculate Y position relative to canvas
+        const touchY = (touch.clientY - rect.top) * scaleY;
+        
+        // Move player paddle to center on finger
+        player.y = touchY - paddleH / 2;
+        
+        // Clamp inside bounds
+        player.y = Math.max(0, Math.min(H - paddleH, player.y));
+    }
+
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+
 
     // =======================
     // PARTICLE SYSTEM
@@ -105,9 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // GAME LOGIC
     // =======================
     function update() {
-        // Player Movement
+        // Player Movement (Keyboard)
         if (keys["w"] || keys["ArrowUp"]) player.y -= paddleSpeed;
         if (keys["s"] || keys["ArrowDown"]) player.y += paddleSpeed;
+        
+        // Note: Touch movement sets player.y directly in handleTouch
+        
+        // Boundary checks for player
         player.y = Math.max(0, Math.min(H - paddleH, player.y));
 
         // Ball Movement
