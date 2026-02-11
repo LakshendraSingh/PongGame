@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NEON PONG: CYBER EDITION</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  
   <!-- Link to external CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -18,10 +19,12 @@
     <div class="game-wrapper">
       <canvas id="game" width="800" height="600"></canvas>
     </div>
+    <!-- Mobile Hint Text -->
+    <div class="mobile-hint">DRAG TO MOVE • TAP TO START</div>
 
     <div id="ui" class="cyber-panel">
       <div class="input-group">
-        <input id="name" placeholder="ENTER INITIALS" maxlength="3">
+        <input id="name" placeholder="INIT" maxlength="3">
         <button onclick="submitScore()">SAVE SCORE</button>
       </div>
       
@@ -35,7 +38,7 @@
           <thead>
             <tr>
               <th>RK</th>
-              <th>OPERATIVE</th>
+              <th>OP</th>
               <th>SCORE</th>
             </tr>
           </thead>
@@ -49,6 +52,7 @@
 
   <!-- Supabase Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <!-- Link to external JS -->
   <script src="script.js"></script>
 </body>
