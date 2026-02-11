@@ -23,6 +23,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =======================
+    // AUDIO SYSTEM (SYNTH)
+    // =======================
+    // We use a simple synth so we don't need external audio files
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        // Browsers require user interaction to unmute
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'paddle') {
+            // High pitch beep for paddle hit
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'wall') {
+            // Lower thud for walls
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'score') {
+            // Musical chime for scoring
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now); // A4
+            osc.frequency.setValueAtTime(880, now + 0.1); // A5
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+    }
+
+    // =======================
     // CANVAS SETUP
     // =======================
     const canvas = document.getElementById("game");
@@ -61,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================
     document.addEventListener("keydown", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = true;
+        // Try to resume audio context on first keypress
+        if (audioCtx.state === 'suspended') audioCtx.resume();
     });
     document.addEventListener("keyup", e => {
         if(keys.hasOwnProperty(e.key) || keys.hasOwnProperty(e.code)) keys[e.key] = false;
@@ -72,6 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTouch(e) {
         e.preventDefault(); // Stop scrolling while playing
         const touch = e.touches[0];
+        
+        // Try to resume audio context on touch
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         
         // Calculate scale in case canvas is resized by CSS
         const rect = canvas.getBoundingClientRect();
@@ -146,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ball.y <= 0 || ball.y >= H - ball.size) {
             ball.dy *= -1;
             spawnParticles(ball.x, ball.y, "#ffffff");
+            playSound('wall');
         }
 
         // AI Movement
@@ -159,15 +212,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hit(player)) {
             reflect(player, 1);
             spawnParticles(player.x + paddleW, ball.y, player.color);
+            playSound('paddle');
         }
         if (hit(ai)) {
             reflect(ai, -1);
             spawnParticles(ai.x, ball.y, ai.color);
+            playSound('paddle');
         }
 
         // Scoring
-        if (ball.x < 0) { aiScore++; resetBall(1); }
-        if (ball.x > W) { playerScore++; resetBall(-1); }
+        if (ball.x < 0) { 
+            aiScore++; 
+            playSound('score');
+            resetBall(1); 
+        }
+        if (ball.x > W) { 
+            playerScore++; 
+            playSound('score');
+            resetBall(-1); 
+        }
 
         // Particles
         particles.forEach(p => p.update());
