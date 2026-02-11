@@ -1,167 +1,55 @@
-:root {
-  --bg: #050505;
-  --neon-cyan: #00f3ff;
-  --neon-pink: #bc13fe;
-  --neon-green: #0aff0a;
-  --glass: rgba(255, 255, 255, 0.05);
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON PONG: CYBER EDITION</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-body {
-  background-color: var(--bg);
-  background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 30px 30px;
-  color: white;
-  font-family: 'Orbitron', sans-serif;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+  <div class="scanlines"></div>
 
-/* CRT Scanline Effect */
-.scanlines {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-  background-size: 100% 4px;
-  pointer-events: none;
-  z-index: 10;
-  opacity: 0.6;
-}
+  <div class="container">
+    <h1 class="neon-title">NEON <span class="flicker">PONG</span></h1>
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
-  padding: 20px;
-}
+    <div class="game-wrapper">
+      <canvas id="game" width="800" height="600"></canvas>
+    </div>
 
-.neon-title {
-  font-size: 3rem;
-  margin-bottom: 10px;
-  color: #fff;
-  text-shadow: 
-    0 0 5px #fff,
-    0 0 10px #fff,
-    0 0 20px var(--neon-cyan),
-    0 0 40px var(--neon-cyan);
-}
+    <div id="ui" class="cyber-panel">
+      <div class="input-group">
+        <input id="name" placeholder="ENTER INITIALS" maxlength="3">
+        <button onclick="submitScore()">SAVE SCORE</button>
+      </div>
+      
+      <div class="controls-row">
+        <button onclick="loadBoard()">REFRESH LEADERBOARD</button>
+      </div>
 
-.flicker {
-  animation: flicker 1.5s infinite alternate;
-}
+      <div id="leaderboard-container">
+        <h3>TOP RUNNERS</h3>
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>RK</th>
+              <th>OPERATIVE</th>
+              <th>SCORE</th>
+            </tr>
+          </thead>
+          <tbody id="board-body">
+            <tr><td colspan="3" class="loading-text">WAITING FOR DATA...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-/* Canvas Styling */
-canvas {
-  background: rgba(10, 10, 15, 0.8);
-  border: 2px solid var(--neon-cyan);
-  box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 20px rgba(0, 243, 255, 0.2);
-  border-radius: 4px;
-  max-width: 100%;
-}
-
-/* UI Panel */
-.cyber-panel {
-  width: 100%;
-  max-width: 800px;
-  margin-top: 20px;
-  background: var(--glass);
-  border: 1px solid var(--neon-pink);
-  padding: 20px;
-  box-shadow: 0 0 15px rgba(188, 19, 254, 0.2);
-  backdrop-filter: blur(5px);
-}
-
-/* Inputs & Buttons */
-input {
-  background: transparent;
-  border: 1px solid var(--neon-cyan);
-  color: var(--neon-cyan);
-  padding: 10px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem;
-  text-align: center;
-  text-transform: uppercase;
-  outline: none;
-}
-
-button {
-  background: transparent;
-  border: 1px solid var(--neon-green);
-  color: var(--neon-green);
-  padding: 10px 20px;
-  font-family: 'Orbitron', sans-serif;
-  cursor: pointer;
-  transition: 0.2s;
-  text-shadow: 0 0 5px var(--neon-green);
-  box-shadow: 0 0 5px var(--neon-green);
-}
-
-button:hover {
-  background: var(--neon-green);
-  color: black;
-  box-shadow: 0 0 20px var(--neon-green);
-}
-
-button.secondary {
-  border-color: var(--neon-pink);
-  color: var(--neon-pink);
-  text-shadow: 0 0 5px var(--neon-pink);
-  box-shadow: 0 0 5px var(--neon-pink);
-}
-
-button.secondary:hover {
-  background: var(--neon-pink);
-  color: white;
-}
-
-.input-group, .controls-row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-/* Leaderboard Table */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  color: white;
-  text-align: left;
-}
-
-th {
-  border-bottom: 2px solid var(--neon-cyan);
-  padding: 10px;
-  color: var(--neon-cyan);
-}
-
-td {
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-tr:nth-child(1) td { color: #ffd700; text-shadow: 0 0 5px #ffd700; } /* Gold */
-tr:nth-child(2) td { color: #c0c0c0; text-shadow: 0 0 5px #c0c0c0; } /* Silver */
-tr:nth-child(3) td { color: #cd7f32; text-shadow: 0 0 5px #cd7f32; } /* Bronze */
-
-.loading-text { text-align: center; color: #666; font-style: italic; }
-
-@keyframes flicker {
-  0%, 18%, 22%, 25%, 53%, 57%, 100% {
-    text-shadow:
-    0 0 4px #fff,
-    0 0 11px #fff,
-    0 0 19px #bc13fe,
-    0 0 40px #bc13fe,
-    0 0 80px #bc13fe;
-  }
-  20%, 24%, 55% {       
-    text-shadow: none;
-  }
-}
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Link to external JS -->
+  <script src="script.js"></script>
+</body>
+</html>
